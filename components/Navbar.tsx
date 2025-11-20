@@ -4,14 +4,7 @@ import { Camera, Menu, X } from 'lucide-react';
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const [activeSection, setActiveSection] = useState('home');
 
   const navLinks = [
     { name: 'Início', href: '#home' },
@@ -20,6 +13,94 @@ const Navbar: React.FC = () => {
     { name: 'Assistente IA', href: '#ai-assistant', highlight: true },
     { name: 'Contato', href: '#contact' },
   ];
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    // Scroll Spy: Detects which section is currently in view
+    const observerOptions = {
+      root: null,
+      rootMargin: '-50% 0px -50% 0px', // Trigger when section is in the middle of viewport
+      threshold: 0
+    };
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    const sections = document.querySelectorAll('section[id]');
+    sections.forEach((section) => observer.observe(section));
+
+    window.addEventListener('scroll', handleScroll);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      sections.forEach((section) => observer.unobserve(section));
+      observer.disconnect();
+    };
+  }, []);
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    setIsMobileMenuOpen(false);
+    
+    const targetId = href.substring(1);
+    const element = document.getElementById(targetId);
+    
+    if (element) {
+      const navHeight = 80; // Approximate height of the fixed navbar
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - navHeight;
+  
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+    } else if (targetId === 'home') {
+      // Fallback for home if section missing, just go top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const getLinkClasses = (link: typeof navLinks[0]) => {
+    const isActive = activeSection === link.href.substring(1);
+    let classes = "text-sm font-medium tracking-widest transition-colors duration-300 ";
+
+    if (link.highlight) {
+      classes += "px-4 py-2 border rounded ";
+      if (isActive) {
+        classes += "bg-gold-500 text-black border-gold-500";
+      } else {
+        classes += "bg-gold-500/10 text-gold-400 border-gold-500/20 hover:bg-gold-500 hover:text-black";
+      }
+    } else {
+      if (isActive) {
+        classes += "text-gold-400";
+      } else {
+        classes += "text-neutral-300 hover:text-white";
+      }
+    }
+    return classes;
+  };
+
+  const getMobileLinkClasses = (link: typeof navLinks[0]) => {
+    const isActive = activeSection === link.href.substring(1);
+    let classes = "block py-3 text-center text-sm font-medium tracking-widest ";
+    
+    if (isActive) {
+       classes += "text-gold-400 bg-white/5";
+    } else {
+       classes += link.highlight ? "text-gold-400" : "text-neutral-300";
+    }
+    return classes;
+  }
 
   return (
     <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-neutral-950/90 backdrop-blur-md py-4 shadow-lg border-b border-white/5' : 'bg-transparent py-6'}`}>
@@ -42,11 +123,8 @@ const Navbar: React.FC = () => {
               <a
                 key={link.name}
                 href={link.href}
-                className={`text-sm font-medium tracking-widest transition-colors duration-300 ${
-                  link.highlight 
-                    ? 'px-4 py-2 bg-gold-500/10 text-gold-400 border border-gold-500/20 rounded hover:bg-gold-500 hover:text-black'
-                    : 'text-neutral-300 hover:text-white'
-                }`}
+                onClick={(e) => handleNavClick(e, link.href)}
+                className={getLinkClasses(link)}
               >
                 {link.name.toUpperCase()}
               </a>
@@ -55,7 +133,7 @@ const Navbar: React.FC = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-white p-2"
+            className="md:hidden text-white p-2 hover:text-gold-400 transition-colors"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X /> : <Menu />}
@@ -65,16 +143,14 @@ const Navbar: React.FC = () => {
 
       {/* Mobile Navigation */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-neutral-950 border-b border-white/10">
+        <div className="md:hidden absolute top-full left-0 w-full bg-neutral-950 border-b border-white/10 shadow-2xl animate-[fadeIn_0.2s_ease-out]">
           <div className="px-4 py-4 space-y-2">
             {navLinks.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`block py-3 text-center text-sm font-medium tracking-widest ${
-                  link.highlight ? 'text-gold-400' : 'text-neutral-300'
-                }`}
+                onClick={(e) => handleNavClick(e, link.href)}
+                className={getMobileLinkClasses(link)}
               >
                 {link.name.toUpperCase()}
               </a>
