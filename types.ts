@@ -5,6 +5,16 @@ export interface PhotoItem {
   url: string;
   title: string;
   category: string;
+  description?: string; // Novo campo para descrição do evento
+}
+
+export interface Album {
+  id: number;
+  title: string;
+  coverUrl: string;
+  date: string;
+  description: string;
+  photos: PhotoItem[];
 }
 
 export interface ServiceItem {
@@ -26,3 +36,5 @@ export interface AICaptionResponse {
   technicalAnalysis: string;
   tags: string[];
 }
+
+export type ViewState = 'home' | 'admin';

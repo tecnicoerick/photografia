@@ -26,7 +26,10 @@ const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <div className="flex items-center space-x-2 group cursor-pointer">
+          <div 
+            className="flex items-center space-x-2 group cursor-pointer"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
             <Camera className="w-8 h-8 text-gold-400 group-hover:rotate-12 transition-transform duration-300" />
             <span className="font-serif text-2xl font-bold tracking-wider text-white">
               LUMINA <span className="text-gold-400">LENS</span>
